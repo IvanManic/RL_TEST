@@ -23,4 +23,8 @@ from directorie(s):
 npm -install 
 node server.js
 
+In Task2 is a small shell script that removes Postgres
+
+remove_pg.sh
+
 
