@@ -4,15 +4,11 @@ disqualification. We hire all candidates who successfully pass the interview pro
 not competing with other candidates.
 
 1. How would you print a 1M-th line in a file that has 5M lines?
-```
     head -1000000 filename | tail +1000000
     sed -n '1000000p' filename
- ```
 2. How would you print all data that are between two specific strings, like "car" and
 "banana", from a single file?
-```
     sed -n '/car/, /banana/{ /car/! {/banana/!p }}' filename
-```
 3. How would you print 10 lines after a specific string, like "car", from a single file?
 	awk '/car/{x=NR+1}(NR<=x){print}' filename
     sed -n '/car/,+10p' filename
