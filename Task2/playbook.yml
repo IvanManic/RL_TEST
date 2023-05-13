@@ -1,0 +1,114 @@
+- name: Task 2  - RL Ivan Manic Edition
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    upstream_server1: "localhost:5001"
+    upstream_server2: "localhost:5002"
+    upstream_server3: "localhost:5003"
+    service_name: "api"
+    RL_rate: 10
+    postgres_login_user: postgres
+    postgres_login_password: postgres
+    db_name: rl_test
+    db_user: rlusr
+    db_user_password: postgres
+    test_mode: true
+#------------------- Nginx config -----------------------
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Copy nginx configuration file - configure upstream
+      template:
+        src:  sites-default.j2
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Restart nginx
+      service: 
+        name: nginx 
+        state: restarted
+
+    - name: Moving to the SSHD config
+      ansible.builtin.debug:
+        msg: Moving to the SSHD config
+
+#------------------- SSHD config -----------------------
+
+    - name: configure ssh server to only work with key files - Install OpenSSH server
+      apt:
+        name: openssh-server
+        state: present
+
+    - name: Set PasswordAuthentication to no in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication '
+        line: 'PasswordAuthentication no'
+        backup: yes
+      notify: Restart sshd
+
+    - name: Enable PubkeyAuthentication Authentication
+      lineinfile:
+           dest: /etc/ssh/sshd_config
+           regexp: '^PubkeyAuthentication'
+           line: "PubkeyAuthentication yes"
+           state: present
+           owner: root
+           group: root
+           mode: '0644'
+           backup: yes
+      notify: Restart sshd
+
+#------------------- Postgres ----------------------
+
+    - name: Moving to the Postgres block
+      ansible.builtin.debug:
+        msg: Moving to the Postgres block
+
+    - name: Install PostgreSQL
+      apt:
+        name: postgresql
+        state: present
+
+    - name: Ensure login is permitted from PGADM in configuration file
+      lineinfile:
+        path: /etc/postgresql/12/main/pg_hba.conf
+        line: host all postgres 127.0.0.1/32 trust
+        state: present
+        insertafter: "^# IPv4 local connections:"
+      when: test_mode
+
+    - name: Create PostgreSQL database
+      become_user: "{{ postgres_login_user }}"
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_user: "{{ postgres_login_user }}"
+        login_password: "{{ postgres_login_password }}"
+
+    - name: Create "{{db_user}}" user for my "{{ db_name }}"
+      become_user:  "{{ postgres_login_user }}"
+      postgresql_user:
+        name: "{{db_user}}"
+        password: "{{db_user_password}}"
+
+    - name: Grant SELECT access to rl_test database for rlusr
+      become_user: "{{ postgres_login_user }}"
+      postgresql_privs:
+        database: "{{ db_name }}"
+        objs: "{{ db_name }}"
+        privs: SELECT
+        type: database
+        role: reader
+
+  handlers:
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted

@@ -1,0 +1,60 @@
+---
+- name: Install and configure PostgreSQL
+  hosts: all
+  become: true
+  vars:
+    postgres_login_user: postgres
+    postgres_login_password: postgres
+    db_name: rl_test
+    db_user: rlusr
+    db_user_password: postgres
+
+    test_mode: true
+
+  tasks:
+  - name: Install PostgreSQL
+    apt:
+      name: postgresql
+      state: present
+
+  - name: Ensure login is permitted from PGADM in configuration file
+    lineinfile:
+      path: /etc/postgresql/12/main/pg_hba.conf
+      line: host all postgres 127.0.0.1/32 trust
+      state: present
+      insertafter: "^# IPv4 local connections:"
+    when: test_mode
+
+
+
+  - name: Create PostgreSQL database
+    become_user: "{{ postgres_login_user }}"
+    postgresql_db:
+      name: "{{ db_name }}"
+      state: present
+      login_user: "{{ postgres_login_user }}"
+      login_password: "{{ postgres_login_password }}"
+
+  - name: Create "{{db_user}}" user for my "{{ db_name }}"
+    become: yes
+    become_user:  "{{ postgres_login_user }}"
+    postgresql_user:
+      name: "{{db_user}}"
+      password: "{{db_user_password}}"
+ 
+  - name: Grant SELECT access to rl_test database for rlusr
+    become: yes
+    become_user: "{{ postgres_login_user }}"
+    postgresql_privs:
+      database: "{{ db_name }}"
+      objs: "{{ db_name }}"
+      privs: SELECT
+      type: database
+      role: reader
+  
+
+  
+  - name: Restart PostgreSQL service
+    service:
+      name: postgresql
+      state: restarted

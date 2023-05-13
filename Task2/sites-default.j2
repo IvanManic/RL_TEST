@@ -1,0 +1,33 @@
+
+upstream backend {
+                server {{upstream_server1}} weight=80;
+                server {{upstream_server2}} weight=10;
+                server {{upstream_server3}} weight=10;
+        }
+limit_req_zone $binary_remote_addr zone=RL_limit:10m rate={{RL_rate}}r/s;
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	add_header RL SRE;
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		try_files $uri $uri/ =404;
+	}
+
+	location /backend
+	{
+	   limit_req zone=RL_limit;
+           proxy_pass http://backend/{{service_name}};
+        }
+
+	location /phpinfo.php 
+	{
+	   deny all;
+	}
+
+}
