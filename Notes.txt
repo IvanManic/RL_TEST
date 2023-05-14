@@ -18,13 +18,10 @@ Testing for Nginx reverse_proxy was done by using 3 nodejs apps located in ./Rev
 
 If you want to use it(nodeModules ware removed to keep it minimal):
 
-from directorie(s):
+use start/stop_min_apps.sh
 
-npm -install 
-node server.js
-
-In Task2 is a small shell script that removes Postgres or Nginx
+In Task2 is a small shell script that removes Postgres/Nginx used for tests.
 
 remove_pg.sh
-
+remove_nginx.sh
 
