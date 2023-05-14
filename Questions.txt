@@ -5,12 +5,12 @@ not competing with other candidates.
 
 1. How would you print a 1M-th line in a file that has 5M lines?
     head -1000000 filename | tail +1000000
+    or
     sed -n '1000000p' filename
 2. How would you print all data that are between two specific strings, like "car" and
 "banana", from a single file?
     sed -n '/car/, /banana/{ /car/! {/banana/!p }}' filename
 3. How would you print 10 lines after a specific string, like "car", from a single file?
-	awk '/car/{x=NR+1}(NR<=x){print}' filename
     sed -n '/car/,+10p' filename
 4. How would you print all lines after line 99999?
     sed -n '99999,$p' filename
@@ -22,11 +22,7 @@ which scenario would you use each of them:
 6. How would you expose a password to a specific microservice inside a k8s cluster?
     Using a secret object and mapping it to ConfigMap.
 7. How would you implement a load balancer on k8s on a self-hosted cluster?
-    Use an ingress controller: An ingress controller is a Kubernetes resource that manages inbound traffic to your cluster. 
-    It typically runs as a pod on your cluster and can route traffic to different services based on the request URL. 
-    There are many open-source ingress controllers available, such as Nginx, Traefik, and Istio, which can be deployed on your cluster. 
-    Ingress controllers can be configured to use a variety of load-balancing algorithms, such as round-robin or least connections, to distribute traffic among your pods.
-
+    Using MetalLB or NGINX Ingress Controller. 
 8. What's the difference between ClusterIP, NodePort, LoadBalancer and Ingress
 Resource?
     ClusterIP: A ClusterIP service provides a stable IP address for accessing a set of pods within the cluster. This is the default service type and is used for internal communication between pods within the cluster. A ClusterIP service is not accessible from outside the cluster.
